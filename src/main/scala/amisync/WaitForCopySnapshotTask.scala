@@ -17,7 +17,7 @@ case class WaitForCopySnapshotTask(snapshotId: SnapshotId) extends Task {
     val detail = res.getSnapshots.get(0)
     detail.getState match {
       case "pending" =>
-        println(s"Waiting for snapshot ${detail.getSnapshotId} to be copied (${detail.getProgress})")
+        println(s"Waiting for $snapshotId to be copied (${detail.getProgress})")
         Queue(this)
 
       case "completed" =>

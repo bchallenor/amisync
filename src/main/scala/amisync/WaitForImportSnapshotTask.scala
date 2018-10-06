@@ -17,7 +17,7 @@ case class WaitForImportSnapshotTask(importTaskId: ImportTaskId) extends Task {
     val detail = res.getImportSnapshotTasks.get(0).getSnapshotTaskDetail
     detail.getStatus match {
       case "active" =>
-        println(s"Waiting for snapshot ${detail.getSnapshotId} to be imported (${detail.getProgress}%)")
+        println(s"Waiting for $importTaskId to complete (${detail.getProgress}%)")
         Queue(this)
 
       case "completed" =>
