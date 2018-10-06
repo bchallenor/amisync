@@ -3,11 +3,10 @@ package amisync
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
-import com.amazonaws.regions.DefaultAwsRegionProviderChain
+import com.amazonaws.services.ec2.AmazonEC2
 import com.amazonaws.services.ec2.model.{DescribeImagesRequest, Filter, Image}
-import com.amazonaws.services.ec2.{AmazonEC2, AmazonEC2ClientBuilder}
+import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.S3ObjectSummary
-import com.amazonaws.services.s3.{AmazonS3, AmazonS3ClientBuilder}
 
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
@@ -16,38 +15,15 @@ import scala.concurrent.duration._
 
 object AmiSync {
   def main(args: Array[String]): Unit = {
-    val (vmImportRoleName, bucket, keyPrefix) = args match {
-      case Array(p1, p2, p3) => (RoleName(p1), Bucket(p2), KeyPrefix(p3))
-      case _                 => sys.exit(1)
+    val (bucket, keyPrefix) = args match {
+      case Array(p1, p2) => (Bucket(p1), KeyPrefix(p2))
+      case _             => sys.exit(1)
     }
-    val ctx = buildContext(vmImportRoleName)
+    val ctx = Context.default
     val taskQueues = buildSyncImageTaskQueues(ctx, bucket, keyPrefix)
     taskQueues.par.foreach { taskQueue =>
       println(s"Task queue: $taskQueue")
       runTasks(taskQueue, ctx)
-    }
-  }
-
-  private def buildContext(vmImportRoleName1: RoleName): Context = {
-    new Context {
-      override lazy val regionName: RegionName = {
-        val chain = new DefaultAwsRegionProviderChain
-        RegionName(chain.getRegion)
-      }
-
-      override lazy val vmImportRoleName: RoleName = vmImportRoleName1
-
-      override lazy val s3: AmazonS3 = {
-        val builder = AmazonS3ClientBuilder.standard()
-        builder.setRegion(regionName.name)
-        builder.build()
-      }
-
-      override lazy val ec2: AmazonEC2 = {
-        val builder = AmazonEC2ClientBuilder.standard()
-        builder.setRegion(regionName.name)
-        builder.build()
-      }
     }
   }
 
