@@ -9,7 +9,6 @@ import spray.json._
 
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
-import scala.collection.immutable.Queue
 
 object AmiSync {
   def main(args: Array[String]): Unit = {
@@ -18,27 +17,21 @@ object AmiSync {
       case _             => sys.exit(1)
     }
     val config = Config.default
-    val taskQueues = buildSyncImageTaskQueues(config, bucket, keyPrefix)
-    taskQueues.par.foreach { taskQueue =>
-      println(s"Task queue: ${taskQueue.toJson.prettyPrint}")
-      runTasks(taskQueue, config)
-    }
+    val tasks = buildSyncImageTasks(config, bucket, keyPrefix)
+    println(s"Tasks: ${tasks.toJson.prettyPrint}")
+    runTasks(tasks, config)
   }
 
-  private def buildSyncImageTaskQueues(config: Config, bucket: Bucket, keyPrefix: KeyPrefix): Set[Queue[Task]] = {
+  private def buildSyncImageTasks(config: Config, bucket: Bucket, keyPrefix: KeyPrefix): Set[Task] = {
     val importable = findImportableImages(config.s3, bucket, keyPrefix)
     val imported = findImportedImages(config.ec2)
 
-    val extra = (imported -- importable.keySet).iterator.map { case (ami, image) =>
-      Queue(
-        DeregisterAmiAndDeleteSnapshotsTask(AmiId(image.getImageId))
-      )
+    val extra: Set[Task] = (imported -- importable.keySet).iterator.map { case (ami, image) =>
+      DeregisterAmiAndDeleteSnapshotsTask(AmiId(image.getImageId))
     }.toSet
 
-    val missing = (importable -- imported.keySet).iterator.map { case (ami, obj) =>
-      Queue(
-        ImportAmiFromS3Task(ami, bucket, Key(obj.getKey))
-      )
+    val missing: Set[Task] = (importable -- imported.keySet).iterator.map { case (ami, obj) =>
+      ImportAmiFromS3Task(ami, bucket, Key(obj.getKey))
     }.toSet
 
     extra ++ missing
@@ -70,12 +63,12 @@ object AmiSync {
   }
 
   @tailrec
-  private def runTasks(tasks: Queue[Task], config: Config): Unit = {
-    tasks.dequeueOption match {
-      case Some((head, tail)) =>
-        println(s"Running task: ${head.toJson.prettyPrint}")
-        val next = head.run(config)
-        runTasks(tail ++ next, config)
+  private def runTasks(tasks: Set[Task], config: Config): Unit = {
+    tasks.headOption match {
+      case Some(task) =>
+        println(s"Running task: ${task.toJson.prettyPrint}")
+        val nextTasks = task.run(config)
+        runTasks(tasks - task ++ nextTasks, config)
       case None =>
     }
   }

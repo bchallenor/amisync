@@ -4,7 +4,7 @@ import java.util.UUID
 
 import spray.json._
 
-import scala.collection.immutable.{ListMap, Queue}
+import scala.collection.immutable.ListMap
 import scala.concurrent.duration._
 import scala.reflect.ClassTag
 
@@ -120,5 +120,4 @@ package object json {
   }
 
   implicit def setJsonFormat[A: JsonFormat]: JsonFormat[Set[A]] = jsonFormatVia[Set[A], List[A]](x => Set(x: _*), x => Some(x.toList))
-  implicit def queueJsonFormat[A: JsonFormat]: JsonFormat[Queue[A]] = jsonFormatVia[Queue[A], List[A]](x => Queue(x: _*), x => Some(x.toList))
 }
