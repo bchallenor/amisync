@@ -81,11 +81,11 @@ object AmiSync {
       case Some((head, tail)) =>
         println(s"Running task: $head")
         val next = head.run(config)
-        val maybeDelayTask = if (next == List(head)) {
-          Queue(new LeafTask {
-            override def run(config: Config): Nil.type = {
+        val maybeDelayTask = if (next == Queue(head)) {
+          Queue(new Task {
+            override def run(config: Config): Queue[Task] = {
               Thread.sleep(1.seconds.toMillis)
-              Nil
+              Queue.empty
             }
           })
         } else Queue()

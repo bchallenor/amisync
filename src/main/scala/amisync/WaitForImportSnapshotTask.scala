@@ -4,8 +4,10 @@ import java.util.Collections
 
 import com.amazonaws.services.ec2.model.DescribeImportSnapshotTasksRequest
 
+import scala.collection.immutable.Queue
+
 case class WaitForImportSnapshotTask(importTaskId: ImportTaskId) extends Task {
-  override def run(config: Config): List[Task] = {
+  override def run(config: Config): Queue[Task] = {
     import config._
     val res = ec2.describeImportSnapshotTasks({
       val req = new DescribeImportSnapshotTasksRequest()
@@ -16,10 +18,10 @@ case class WaitForImportSnapshotTask(importTaskId: ImportTaskId) extends Task {
     detail.getStatus match {
       case "active" =>
         println(s"Waiting for snapshot ${detail.getSnapshotId} to be imported (${detail.getProgress}%)")
-        List(this)
+        Queue(this)
 
       case "completed" =>
-        Nil
+        Queue.empty
 
       case status =>
         throw new IllegalStateException(s"Unknown import snapshot task status: $status")

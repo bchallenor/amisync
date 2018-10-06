@@ -2,8 +2,10 @@ package amisync
 
 import com.amazonaws.services.ec2.model.{ImportSnapshotRequest, SnapshotDiskContainer, UserBucket}
 
+import scala.collection.immutable.Queue
+
 case class ImportAmiFromS3Task(amiName: AmiName, bucket: Bucket, key: Key) extends Task {
-  override def run(config: Config): List[Task] = {
+  override def run(config: Config): Queue[Task] = {
     import config._
     val res = ec2.importSnapshot({
       val req = new ImportSnapshotRequest()
@@ -23,7 +25,7 @@ case class ImportAmiFromS3Task(amiName: AmiName, bucket: Bucket, key: Key) exten
       req
     })
     val detail = res.getSnapshotTaskDetail
-    List(
+    Queue(
       WaitForImportSnapshotTask(ImportTaskId(res.getImportTaskId)),
       ImportAmiFromSnapshotTask(amiName, SnapshotId(detail.getSnapshotId))
     )

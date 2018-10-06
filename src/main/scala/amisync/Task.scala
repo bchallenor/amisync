@@ -1,9 +1,7 @@
 package amisync
 
-trait Task {
-  def run(config: Config): List[Task]
-}
+import scala.collection.immutable.Queue
 
-trait LeafTask extends Task {
-  override def run(config: Config): Nil.type
+trait Task {
+  def run(config: Config): Queue[Task]
 }
