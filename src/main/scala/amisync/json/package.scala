@@ -1,5 +1,7 @@
 package amisync
 
+import java.util.UUID
+
 import spray.json._
 
 import scala.collection.immutable.{ListMap, Queue}
@@ -64,6 +66,42 @@ package object json {
 
     private def writeTask[T: JsonFormat](typeName: String, task: T): JsObject = {
       JsObject(ListMap("task" -> typeName.toJson) ++ task.toJson.asJsObject.fields.toList.sortBy(_._1))
+    }
+  }
+
+  private trait Placeholder[A] {
+    def placeholder(uuid: UUID): A
+  }
+
+  implicit def continuationJsonFormat[A: Placeholder: JsonFormat, B: JsonFormat]: JsonFormat[A => B] = new JsonFormat[A => B] {
+    override def write(k: A => B): JsValue = {
+      val param = implicitly[Placeholder[A]].placeholder(UUID.randomUUID())
+      JsObject(
+        "param" -> param.toJson,
+        "expr" -> k(param).toJson
+      )
+    }
+
+    override def read(json: JsValue): A => B = {
+      val obj = json.asJsObject
+      val paramJson = obj.fields("param")
+      val exprJson = obj.fields("expr")
+
+      a => {
+        val paramValJson = a.toJson
+
+        def replace(json: JsValue): JsValue = json match {
+          case `paramJson` => paramValJson
+          case JsObject(fields) => JsObject(fields.map { case (k, v) => k -> replace(v) })
+          case JsArray(elements) => JsArray(elements.map(replace))
+          case x: JsString => x
+          case x: JsNumber => x
+          case x: JsBoolean => x
+          case x: JsNull.type => x
+        }
+
+        replace(exprJson).convertTo[B]
+      }
     }
   }
 
