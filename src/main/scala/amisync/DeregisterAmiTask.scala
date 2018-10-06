@@ -2,7 +2,7 @@ package amisync
 
 import com.amazonaws.services.ec2.model.DeregisterImageRequest
 
-case class DeregisterAmiTask(amiId: AmiId) extends Task {
+case class DeregisterAmiTask(amiId: AmiId, k: Set[Task]) extends Task {
   override def run(config: Config): Set[Task] = {
     import config._
     ec2.deregisterImage({
@@ -10,6 +10,6 @@ case class DeregisterAmiTask(amiId: AmiId) extends Task {
       req.setImageId(amiId.id)
       req
     })
-    Set.empty
+    k
   }
 }

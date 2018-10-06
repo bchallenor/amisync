@@ -30,15 +30,8 @@ object AmiSync {
     val imported = findImportedImages(config.ec2)
 
     val extra = (imported -- importable.keySet).iterator.map { case (ami, image) =>
-      val rootDeviceMapping = image
-        .getBlockDeviceMappings
-        .asScala
-        .find(_.getDeviceName == image.getRootDeviceName)
-        .getOrElse(sys.error(s"Missing root device mapping: $image"))
-
       Queue(
-        DeregisterAmiTask(AmiId(image.getImageId)),
-        DeleteSnapshotTask(SnapshotId(rootDeviceMapping.getEbs.getSnapshotId))
+        DeregisterAmiAndDeleteSnapshotsTask(AmiId(image.getImageId))
       )
     }.toSet
 
