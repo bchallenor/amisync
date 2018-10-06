@@ -1,8 +1,5 @@
 package amisync
 
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
-
 import com.amazonaws.services.ec2.AmazonEC2
 import com.amazonaws.services.ec2.model.{DescribeImagesRequest, Filter, Image}
 import com.amazonaws.services.s3.AmazonS3
@@ -57,7 +54,7 @@ object AmiSync {
     val res = s3.listObjects(bucket.name, keyPrefix.name)
     assert(!res.isTruncated, s"Truncated: $res")
     res.getObjectSummaries.iterator.asScala.map(obj => {
-      deriveAmiName(obj) -> obj
+      AmiName.deriveFrom(Key(obj.getKey)) -> obj
     }).toMap
   }
 
@@ -76,16 +73,6 @@ object AmiSync {
     res.getImages.iterator.asScala.map(image => {
       AmiName(image.getName) -> image
     }).toMap
-  }
-
-  private def deriveAmiName(obj: S3ObjectSummary): AmiName = {
-    val key = obj.getKey
-    val rootName = key.split("/").last.split("\\.").head
-    val lastModified = obj.getLastModified.toInstant.atOffset(ZoneOffset.UTC)
-    val datePattern = DateTimeFormatter.ofPattern("yyyyMMdd")
-    val timePattern = DateTimeFormatter.ofPattern("HHmmss")
-    val name = s"$rootName-${lastModified.format(datePattern)}-${lastModified.format(timePattern)}"
-    AmiName(name)
   }
 
   @tailrec
