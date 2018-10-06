@@ -5,6 +5,7 @@ import java.util.UUID
 import spray.json._
 
 import scala.collection.immutable.{ListMap, Queue}
+import scala.concurrent.duration._
 import scala.reflect.ClassTag
 
 package object json {
@@ -23,6 +24,11 @@ package object json {
 
   implicit lazy val unitJsonFormat: JsonFormat[Unit] = jsonFormatVia[Unit, JsObject](_ => (), _ => Some(JsObject.empty))
 
+  implicit lazy val finiteDurationFormat: JsonFormat[FiniteDuration] = jsonFormatVia[FiniteDuration, String](
+    s => Duration(s).asInstanceOf[FiniteDuration],
+    d => Some(d.toString)
+  )
+
   implicit lazy val regionNameFormat: JsonFormat[RegionName] = jsonFormatVia(RegionName.apply, RegionName.unapply)
   implicit lazy val roleNameFormat: JsonFormat[RoleName] = jsonFormatVia(RoleName.apply, RoleName.unapply)
   implicit lazy val bucketFormat: JsonFormat[Bucket] = jsonFormatVia(Bucket.apply, Bucket.unapply)
@@ -34,16 +40,18 @@ package object json {
   implicit lazy val snapshotIdFormat: JsonFormat[SnapshotId] = jsonFormatVia(SnapshotId.apply, SnapshotId.unapply)
 
   implicit lazy val taskJsonFormat: JsonFormat[Task] = new JsonFormat[Task] {
+    private implicit lazy val delayTaskFormat: JsonFormat[DelayTask] = jsonFormat2(DelayTask)
     private implicit lazy val deleteSnapshotTaskFormat: JsonFormat[DeleteSnapshotTask] = jsonFormat1(DeleteSnapshotTask)
     private implicit lazy val deregisterAmiTaskFormat: JsonFormat[DeregisterAmiTask] = jsonFormat1(DeregisterAmiTask)
     private implicit lazy val importAmiFromS3TaskFormat: JsonFormat[ImportAmiFromS3Task] = jsonFormat3(ImportAmiFromS3Task)
     private implicit lazy val importAmiFromSnapshotTaskFormat: JsonFormat[ImportAmiFromSnapshotTask] = jsonFormat2(ImportAmiFromSnapshotTask)
     private implicit lazy val registerAmiTaskFormat: JsonFormat[RegisterAmiTask] = jsonFormat2(RegisterAmiTask)
-    private implicit lazy val waitForCopySnapshotTaskFormat: JsonFormat[WaitForCopySnapshotTask] = jsonFormat1(WaitForCopySnapshotTask)
-    private implicit lazy val waitForImportSnapshotTaskFormat: JsonFormat[WaitForImportSnapshotTask] = jsonFormat1(WaitForImportSnapshotTask)
+    private implicit lazy val waitForCopySnapshotTaskFormat: JsonFormat[WaitForCopySnapshotTask] = jsonFormat2(WaitForCopySnapshotTask)
+    private implicit lazy val waitForImportSnapshotTaskFormat: JsonFormat[WaitForImportSnapshotTask] = jsonFormat2(WaitForImportSnapshotTask)
 
     override def read(json: JsValue): Task = {
       json.asJsObject.fields("task").convertTo[String] match {
+        case "Delay" => delayTaskFormat.read(json)
         case "DeleteSnapshot" => deleteSnapshotTaskFormat.read(json)
         case "DeregisterAmi" => deregisterAmiTaskFormat.read(json)
         case "ImportAmiFromS3" => importAmiFromS3TaskFormat.read(json)
@@ -55,6 +63,7 @@ package object json {
     }
 
     override def write(obj: Task): JsValue = obj match {
+      case task: DelayTask => writeTask("Delay", task)
       case task: DeleteSnapshotTask => writeTask("DeleteSnapshot", task)
       case task: DeregisterAmiTask => writeTask("DeregisterAmi", task)
       case task: ImportAmiFromS3Task => writeTask("ImportAmiFromS3", task)
@@ -72,6 +81,8 @@ package object json {
   private trait Placeholder[A] {
     def placeholder(uuid: UUID): A
   }
+
+  private implicit lazy val snapshotIdPlaceholder: Placeholder[SnapshotId] = uuid => SnapshotId(uuid.toString)
 
   implicit def continuationJsonFormat[A: Placeholder: JsonFormat, B: JsonFormat]: JsonFormat[A => B] = new JsonFormat[A => B] {
     override def write(k: A => B): JsValue = {
@@ -105,5 +116,6 @@ package object json {
     }
   }
 
+  implicit def setJsonFormat[A: JsonFormat]: JsonFormat[Set[A]] = jsonFormatVia[Set[A], List[A]](x => Set(x: _*), x => Some(x.toList))
   implicit def queueJsonFormat[A: JsonFormat]: JsonFormat[Queue[A]] = jsonFormatVia[Queue[A], List[A]](x => Queue(x: _*), x => Some(x.toList))
 }

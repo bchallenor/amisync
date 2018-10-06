@@ -4,10 +4,10 @@ import java.util.Collections
 
 import com.amazonaws.services.ec2.model.DescribeSnapshotsRequest
 
-import scala.collection.immutable.Queue
+import scala.concurrent.duration._
 
-case class WaitForCopySnapshotTask(snapshotId: SnapshotId) extends Task {
-  override def run(config: Config): Queue[Task] = {
+case class WaitForCopySnapshotTask(snapshotId: SnapshotId, k: SnapshotId => Set[Task]) extends Task {
+  override def run(config: Config): Set[Task] = {
     import config._
     val res = ec2.describeSnapshots({
       val req = new DescribeSnapshotsRequest()
@@ -18,10 +18,10 @@ case class WaitForCopySnapshotTask(snapshotId: SnapshotId) extends Task {
     detail.getState match {
       case "pending" =>
         println(s"Waiting for $snapshotId to be copied (${detail.getProgress})")
-        Queue(this)
+        Set(DelayTask(5.seconds, Set(this)))
 
       case "completed" =>
-        Queue.empty
+        k(snapshotId)
 
       case state =>
         throw new IllegalStateException(s"Unknown snapshot state: $state")
