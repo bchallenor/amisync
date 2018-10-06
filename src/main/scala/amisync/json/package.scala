@@ -19,19 +19,19 @@ package object json {
     }
   }
 
-  implicit val unitJsonFormat: JsonFormat[Unit] = jsonFormatVia[Unit, JsObject](_ => (), _ => Some(JsObject.empty))
+  implicit lazy val unitJsonFormat: JsonFormat[Unit] = jsonFormatVia[Unit, JsObject](_ => (), _ => Some(JsObject.empty))
 
-  implicit val regionNameFormat: JsonFormat[RegionName] = jsonFormatVia(RegionName.apply, RegionName.unapply)
-  implicit val roleNameFormat: JsonFormat[RoleName] = jsonFormatVia(RoleName.apply, RoleName.unapply)
-  implicit val bucketFormat: JsonFormat[Bucket] = jsonFormatVia(Bucket.apply, Bucket.unapply)
-  implicit val keyFormat: JsonFormat[Key] = jsonFormatVia(Key.apply, Key.unapply)
-  implicit val keyPrefixFormat: JsonFormat[KeyPrefix] = jsonFormatVia(KeyPrefix.apply, KeyPrefix.unapply)
-  implicit val amiIdFormat: JsonFormat[AmiId] = jsonFormatVia(AmiId.apply, AmiId.unapply)
-  implicit val amiNameFormat: JsonFormat[AmiName] = jsonFormatVia(AmiName.apply, AmiName.unapply)
-  implicit val importTaskIdFormat: JsonFormat[ImportTaskId] = jsonFormatVia(ImportTaskId.apply, ImportTaskId.unapply)
-  implicit val snapshotIdFormat: JsonFormat[SnapshotId] = jsonFormatVia(SnapshotId.apply, SnapshotId.unapply)
+  implicit lazy val regionNameFormat: JsonFormat[RegionName] = jsonFormatVia(RegionName.apply, RegionName.unapply)
+  implicit lazy val roleNameFormat: JsonFormat[RoleName] = jsonFormatVia(RoleName.apply, RoleName.unapply)
+  implicit lazy val bucketFormat: JsonFormat[Bucket] = jsonFormatVia(Bucket.apply, Bucket.unapply)
+  implicit lazy val keyFormat: JsonFormat[Key] = jsonFormatVia(Key.apply, Key.unapply)
+  implicit lazy val keyPrefixFormat: JsonFormat[KeyPrefix] = jsonFormatVia(KeyPrefix.apply, KeyPrefix.unapply)
+  implicit lazy val amiIdFormat: JsonFormat[AmiId] = jsonFormatVia(AmiId.apply, AmiId.unapply)
+  implicit lazy val amiNameFormat: JsonFormat[AmiName] = jsonFormatVia(AmiName.apply, AmiName.unapply)
+  implicit lazy val importTaskIdFormat: JsonFormat[ImportTaskId] = jsonFormatVia(ImportTaskId.apply, ImportTaskId.unapply)
+  implicit lazy val snapshotIdFormat: JsonFormat[SnapshotId] = jsonFormatVia(SnapshotId.apply, SnapshotId.unapply)
 
-  implicit val taskJsonFormat: JsonFormat[Task] = new JsonFormat[Task] {
+  implicit lazy val taskJsonFormat: JsonFormat[Task] = new JsonFormat[Task] {
     private implicit val deleteSnapshotTaskFormat: JsonFormat[DeleteSnapshotTask] = jsonFormat1(DeleteSnapshotTask)
     private implicit val deregisterAmiTaskFormat: JsonFormat[DeregisterAmiTask] = jsonFormat1(DeregisterAmiTask)
     private implicit val importAmiFromS3TaskFormat: JsonFormat[ImportAmiFromS3Task] = jsonFormat3(ImportAmiFromS3Task)
