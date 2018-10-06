@@ -3,8 +3,8 @@ package amisync
 import com.amazonaws.services.ec2.model.{ImportSnapshotRequest, SnapshotDiskContainer, UserBucket}
 
 case class ImportAmiFromS3Task(amiName: AmiName, bucket: Bucket, key: Key) extends Task {
-  override def run(ctx: Context): List[Task] = {
-    import ctx._
+  override def run(config: Config): List[Task] = {
+    import config._
     val res = ec2.importSnapshot({
       val req = new ImportSnapshotRequest()
       req.setRoleName(vmImportRoleName.name)

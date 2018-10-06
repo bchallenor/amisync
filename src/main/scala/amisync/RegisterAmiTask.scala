@@ -5,8 +5,8 @@ import java.util.Collections
 import com.amazonaws.services.ec2.model.{BlockDeviceMapping, EbsBlockDevice, RegisterImageRequest}
 
 case class RegisterAmiTask(amiName: AmiName, snapshotId: SnapshotId) extends LeafTask {
-  override def run(ctx: Context): Nil.type = {
-    import ctx._
+  override def run(config: Config): Nil.type = {
+    import config._
     ec2.registerImage({
       val req = new RegisterImageRequest
       req.setName(amiName.name)

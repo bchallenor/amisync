@@ -5,8 +5,8 @@ import java.util.Collections
 import com.amazonaws.services.ec2.model.DescribeSnapshotsRequest
 
 case class WaitForCopySnapshotTask(snapshotId: SnapshotId) extends Task {
-  override def run(ctx: Context): List[Task] = {
-    import ctx._
+  override def run(config: Config): List[Task] = {
+    import config._
     val res = ec2.describeSnapshots({
       val req = new DescribeSnapshotsRequest()
       req.setSnapshotIds(Collections.singleton(snapshotId.id))

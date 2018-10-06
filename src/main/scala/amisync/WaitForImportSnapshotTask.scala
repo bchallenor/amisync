@@ -5,8 +5,8 @@ import java.util.Collections
 import com.amazonaws.services.ec2.model.DescribeImportSnapshotTasksRequest
 
 case class WaitForImportSnapshotTask(importTaskId: ImportTaskId) extends Task {
-  override def run(ctx: Context): List[Task] = {
-    import ctx._
+  override def run(config: Config): List[Task] = {
+    import config._
     val res = ec2.describeImportSnapshotTasks({
       val req = new DescribeImportSnapshotTasksRequest()
       req.setImportTaskIds(Collections.singleton(importTaskId.id))

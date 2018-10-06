@@ -1,9 +1,9 @@
 package amisync
 
 trait Task {
-  def run(ctx: Context): List[Task]
+  def run(config: Config): List[Task]
 }
 
 trait LeafTask extends Task {
-  override def run(ctx: Context): Nil.type
+  override def run(config: Config): Nil.type
 }

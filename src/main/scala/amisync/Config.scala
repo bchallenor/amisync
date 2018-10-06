@@ -4,16 +4,16 @@ import com.amazonaws.regions.DefaultAwsRegionProviderChain
 import com.amazonaws.services.ec2.{AmazonEC2, AmazonEC2ClientBuilder}
 import com.amazonaws.services.s3.{AmazonS3, AmazonS3ClientBuilder}
 
-trait Context {
+trait Config {
   def regionName: RegionName
   def vmImportRoleName: RoleName
   def s3: AmazonS3
   def ec2: AmazonEC2
 }
 
-object Context {
-  def default: Context = {
-    new Context {
+object Config {
+  def default: Config = {
+    new Config {
       override lazy val regionName: RegionName = {
         val chain = new DefaultAwsRegionProviderChain
         RegionName(chain.getRegion)

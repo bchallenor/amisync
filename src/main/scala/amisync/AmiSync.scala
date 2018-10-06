@@ -19,17 +19,17 @@ object AmiSync {
       case Array(p1, p2) => (Bucket(p1), KeyPrefix(p2))
       case _             => sys.exit(1)
     }
-    val ctx = Context.default
-    val taskQueues = buildSyncImageTaskQueues(ctx, bucket, keyPrefix)
+    val config = Config.default
+    val taskQueues = buildSyncImageTaskQueues(config, bucket, keyPrefix)
     taskQueues.par.foreach { taskQueue =>
       println(s"Task queue: $taskQueue")
-      runTasks(taskQueue, ctx)
+      runTasks(taskQueue, config)
     }
   }
 
-  private def buildSyncImageTaskQueues(ctx: Context, bucket: Bucket, keyPrefix: KeyPrefix): Set[Queue[Task]] = {
-    val importable = findImportableImages(ctx.s3, bucket, keyPrefix)
-    val imported = findImportedImages(ctx.ec2)
+  private def buildSyncImageTaskQueues(config: Config, bucket: Bucket, keyPrefix: KeyPrefix): Set[Queue[Task]] = {
+    val importable = findImportableImages(config.s3, bucket, keyPrefix)
+    val imported = findImportedImages(config.ec2)
 
     val extra = (imported -- importable.keySet).iterator.map { case (ami, image) =>
       val rootDeviceMapping = image
@@ -89,20 +89,20 @@ object AmiSync {
   }
 
   @tailrec
-  private def runTasks(tasks: Queue[Task], ctx: Context): Unit = {
+  private def runTasks(tasks: Queue[Task], config: Config): Unit = {
     tasks.dequeueOption match {
       case Some((head, tail)) =>
         println(s"Running task: $head")
-        val next = head.run(ctx)
+        val next = head.run(config)
         val maybeDelayTask = if (next == List(head)) {
           Queue(new LeafTask {
-            override def run(ctx: Context): Nil.type = {
+            override def run(config: Config): Nil.type = {
               Thread.sleep(1.seconds.toMillis)
               Nil
             }
           })
         } else Queue()
-        runTasks(maybeDelayTask ++ next ++ tail, ctx)
+        runTasks(maybeDelayTask ++ next ++ tail, config)
       case None =>
     }
   }
