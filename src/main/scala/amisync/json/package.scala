@@ -32,13 +32,13 @@ package object json {
   implicit lazy val snapshotIdFormat: JsonFormat[SnapshotId] = jsonFormatVia(SnapshotId.apply, SnapshotId.unapply)
 
   implicit lazy val taskJsonFormat: JsonFormat[Task] = new JsonFormat[Task] {
-    private implicit val deleteSnapshotTaskFormat: JsonFormat[DeleteSnapshotTask] = jsonFormat1(DeleteSnapshotTask)
-    private implicit val deregisterAmiTaskFormat: JsonFormat[DeregisterAmiTask] = jsonFormat1(DeregisterAmiTask)
-    private implicit val importAmiFromS3TaskFormat: JsonFormat[ImportAmiFromS3Task] = jsonFormat3(ImportAmiFromS3Task)
-    private implicit val importAmiFromSnapshotTaskFormat: JsonFormat[ImportAmiFromSnapshotTask] = jsonFormat2(ImportAmiFromSnapshotTask)
-    private implicit val registerAmiTaskFormat: JsonFormat[RegisterAmiTask] = jsonFormat2(RegisterAmiTask)
-    private implicit val waitForCopySnapshotTaskFormat: JsonFormat[WaitForCopySnapshotTask] = jsonFormat1(WaitForCopySnapshotTask)
-    private implicit val waitForImportSnapshotTaskFormat: JsonFormat[WaitForImportSnapshotTask] = jsonFormat1(WaitForImportSnapshotTask)
+    private implicit lazy val deleteSnapshotTaskFormat: JsonFormat[DeleteSnapshotTask] = jsonFormat1(DeleteSnapshotTask)
+    private implicit lazy val deregisterAmiTaskFormat: JsonFormat[DeregisterAmiTask] = jsonFormat1(DeregisterAmiTask)
+    private implicit lazy val importAmiFromS3TaskFormat: JsonFormat[ImportAmiFromS3Task] = jsonFormat3(ImportAmiFromS3Task)
+    private implicit lazy val importAmiFromSnapshotTaskFormat: JsonFormat[ImportAmiFromSnapshotTask] = jsonFormat2(ImportAmiFromSnapshotTask)
+    private implicit lazy val registerAmiTaskFormat: JsonFormat[RegisterAmiTask] = jsonFormat2(RegisterAmiTask)
+    private implicit lazy val waitForCopySnapshotTaskFormat: JsonFormat[WaitForCopySnapshotTask] = jsonFormat1(WaitForCopySnapshotTask)
+    private implicit lazy val waitForImportSnapshotTaskFormat: JsonFormat[WaitForImportSnapshotTask] = jsonFormat1(WaitForImportSnapshotTask)
 
     override def read(json: JsValue): Task = {
       json.asJsObject.fields("task").convertTo[String] match {
