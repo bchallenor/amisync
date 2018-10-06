@@ -1,14 +1,15 @@
 package amisync
 
+import amisync.json._
 import com.amazonaws.services.ec2.AmazonEC2
 import com.amazonaws.services.ec2.model.{DescribeImagesRequest, Filter, Image}
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.S3ObjectSummary
+import spray.json._
 
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
 import scala.collection.immutable.Queue
-import scala.concurrent.duration._
 
 object AmiSync {
   def main(args: Array[String]): Unit = {
@@ -19,7 +20,7 @@ object AmiSync {
     val config = Config.default
     val taskQueues = buildSyncImageTaskQueues(config, bucket, keyPrefix)
     taskQueues.par.foreach { taskQueue =>
-      println(s"Task queue: $taskQueue")
+      println(s"Task queue: ${taskQueue.toJson.prettyPrint}")
       runTasks(taskQueue, config)
     }
   }
@@ -79,17 +80,9 @@ object AmiSync {
   private def runTasks(tasks: Queue[Task], config: Config): Unit = {
     tasks.dequeueOption match {
       case Some((head, tail)) =>
-        println(s"Running task: $head")
+        println(s"Running task: ${head.toJson.prettyPrint}")
         val next = head.run(config)
-        val maybeDelayTask = if (next == Queue(head)) {
-          Queue(new Task {
-            override def run(config: Config): Queue[Task] = {
-              Thread.sleep(1.seconds.toMillis)
-              Queue.empty
-            }
-          })
-        } else Queue()
-        runTasks(maybeDelayTask ++ next ++ tail, config)
+        runTasks(tail ++ next, config)
       case None =>
     }
   }

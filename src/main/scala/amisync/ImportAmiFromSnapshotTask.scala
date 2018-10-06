@@ -2,10 +2,8 @@ package amisync
 
 import com.amazonaws.services.ec2.model.CopySnapshotRequest
 
-import scala.collection.immutable.Queue
-
 case class ImportAmiFromSnapshotTask(amiName: AmiName, snapshotId: SnapshotId) extends Task {
-  override def run(config: Config): Queue[Task] = {
+  override def run(config: Config): Set[Task] = {
     import config._
     val res = ec2.copySnapshot({
       val req = new CopySnapshotRequest
@@ -15,11 +13,14 @@ case class ImportAmiFromSnapshotTask(amiName: AmiName, snapshotId: SnapshotId) e
       req.setSourceSnapshotId(snapshotId.id)
       req
     })
-    val encryptedSnapshotId = SnapshotId(res.getSnapshotId)
-    Queue(
-      WaitForCopySnapshotTask(encryptedSnapshotId),
-      DeleteSnapshotTask(snapshotId),
-      RegisterAmiTask(amiName, encryptedSnapshotId)
+    Set(
+      WaitForCopySnapshotTask(
+        SnapshotId(res.getSnapshotId),
+        encryptedSnapshotId => Set(
+          DeleteSnapshotTask(snapshotId),
+          RegisterAmiTask(amiName, encryptedSnapshotId)
+        )
+      )
     )
   }
 }

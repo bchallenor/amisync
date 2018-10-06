@@ -2,16 +2,14 @@ package amisync
 
 import com.amazonaws.services.ec2.model.DeleteSnapshotRequest
 
-import scala.collection.immutable.Queue
-
 case class DeleteSnapshotTask(snapshotId: SnapshotId) extends Task {
-  override def run(config: Config): Queue[Task] = {
+  override def run(config: Config): Set[Task] = {
     import config._
     ec2.deleteSnapshot({
       val req = new DeleteSnapshotRequest()
       req.setSnapshotId(snapshotId.id)
       req
     })
-    Queue.empty
+    Set.empty
   }
 }

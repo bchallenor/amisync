@@ -4,10 +4,8 @@ import java.util.Collections
 
 import com.amazonaws.services.ec2.model.{BlockDeviceMapping, EbsBlockDevice, RegisterImageRequest}
 
-import scala.collection.immutable.Queue
-
 case class RegisterAmiTask(amiName: AmiName, snapshotId: SnapshotId) extends Task {
-  override def run(config: Config): Queue[Task] = {
+  override def run(config: Config): Set[Task] = {
     import config._
     ec2.registerImage({
       val req = new RegisterImageRequest
@@ -30,6 +28,6 @@ case class RegisterAmiTask(amiName: AmiName, snapshotId: SnapshotId) extends Tas
       req.setEnaSupport(true)
       req
     })
-    Queue.empty
+    Set.empty
   }
 }
