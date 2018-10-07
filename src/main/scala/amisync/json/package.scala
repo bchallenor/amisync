@@ -91,22 +91,22 @@ package object json {
   private implicit lazy val amiIdPlaceholder: Placeholder[AmiId] = uuid => AmiId(uuid.toString)
   private implicit lazy val snapshotIdPlaceholder: Placeholder[SnapshotId] = uuid => SnapshotId(uuid.toString)
 
-  implicit def continuationJsonFormat[A: Placeholder: JsonFormat, B: JsonFormat]: JsonFormat[A => B] = new JsonFormat[A => B] {
-    override def write(k: A => B): JsValue = {
-      val param = implicitly[Placeholder[A]].placeholder(UUID.randomUUID())
+  implicit def continuationJsonFormat[T: Placeholder: JsonFormat, R: JsonFormat]: JsonFormat[T => R] = new JsonFormat[T => R] {
+    override def write(k: T => R): JsValue = {
+      val param = implicitly[Placeholder[T]].placeholder(UUID.randomUUID())
       JsObject(
         "param" -> param.toJson,
         "expr" -> k(param).toJson
       )
     }
 
-    override def read(json: JsValue): A => B = {
+    override def read(json: JsValue): T => R = {
       val obj = json.asJsObject
       val paramJson = obj.fields("param")
       val exprJson = obj.fields("expr")
 
-      a => {
-        val paramValJson = a.toJson
+      t => {
+        val paramValJson = t.toJson
 
         def replace(json: JsValue): JsValue = json match {
           case `paramJson` => paramValJson
@@ -118,7 +118,7 @@ package object json {
           case x: JsNull.type => x
         }
 
-        replace(exprJson).convertTo[B]
+        replace(exprJson).convertTo[R]
       }
     }
   }
