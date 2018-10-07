@@ -17,6 +17,10 @@ object AmiSync {
       case _             => sys.exit(1)
     }
     val config = Config.default
+    run(config, bucket, keyPrefix)
+  }
+
+  def run(config: Config, bucket: Bucket, keyPrefix: KeyPrefix): Unit = {
     val tasks = buildSyncImageTasks(config, bucket, keyPrefix)
     println(s"Tasks: ${tasks.toJson.prettyPrint}")
     runTasks(tasks, config)

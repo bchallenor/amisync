@@ -8,7 +8,8 @@ libraryDependencies ++= List(
   "com.amazonaws" % "aws-java-sdk-lambda" % "1.11.422",
   "com.amazonaws" % "aws-lambda-java-core" % "1.2.0",
   "com.amazonaws" % "aws-lambda-java-events" % "2.2.2",
-  "io.spray" %%  "spray-json" % "1.3.4"
+  "io.spray" %%  "spray-json" % "1.3.4",
+  "junit" % "junit" % "4.12" % Test
 )
 
 assembly/assemblyOutputPath := baseDirectory.value / "target" / "amisync.jar"
