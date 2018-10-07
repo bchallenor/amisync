@@ -13,12 +13,16 @@ class S3Handler extends RequestHandler[S3Event, Unit] {
     val config = Config.default
 
     val tasks: Set[Task] = event.getRecords.iterator.asScala.map { record =>
+      val bucket = Bucket(record.getS3.getBucket.getName)
+      val key = Key(record.getS3.getObject.getKey)
+      val amiName = AmiName.deriveFrom(key)
       record.getEventName.split(":")(0) match {
         case "ObjectCreated" =>
-          val bucket = Bucket(record.getS3.getBucket.getName)
-          val key = Key(record.getS3.getObject.getKey)
-          val amiName = AmiName.deriveFrom(key)
           ImportAmiFromS3Task(amiName, bucket, key)
+        case "ObjectRemoved" =>
+          FindAmiTask(amiName, amiId => Set(
+            DeregisterAmiAndDeleteSnapshotsTask(amiId)
+          ))
         case eventType =>
           sys.error(s"Cannot handle event type: $eventType")
       }
