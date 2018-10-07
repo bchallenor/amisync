@@ -11,7 +11,10 @@ abstract class RequestJsonHandler[A: JsonFormat, B: JsonFormat] extends RequestS
   override final def handleRequest(input: InputStream, output: OutputStream, context: Context): Unit = {
     val reader = new BufferedReader(new InputStreamReader(input, UTF_8))
     val aStr = try reader.lines().collect(Collectors.joining()) finally reader.close()
-    val a = JsonParser(aStr).convertTo[A]
+    val a = try JsonParser(aStr).convertTo[A] catch {
+      case e: Exception =>
+        throw new IllegalArgumentException(s"Could not parse JSON: $aStr", e)
+    }
     val b = handleRequest(a, context)
     val bStr = b.toJson.compactPrint
     val writer = new BufferedWriter(new OutputStreamWriter(output, UTF_8))
