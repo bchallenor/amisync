@@ -85,6 +85,7 @@ package object json {
     def placeholder(uuid: UUID): A
   }
 
+  private implicit lazy val amiIdPlaceholder: Placeholder[AmiId] = uuid => AmiId(uuid.toString)
   private implicit lazy val snapshotIdPlaceholder: Placeholder[SnapshotId] = uuid => SnapshotId(uuid.toString)
 
   implicit def continuationJsonFormat[A: Placeholder: JsonFormat, B: JsonFormat]: JsonFormat[A => B] = new JsonFormat[A => B] {
