@@ -7,6 +7,10 @@ package object amisync {
     require(name ne null)
   }
 
+  case class FunctionName(name: String) {
+    require(name ne null)
+  }
+
   case class Bucket(name: String) {
     require(name ne null)
   }

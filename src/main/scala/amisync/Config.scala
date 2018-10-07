@@ -6,6 +6,7 @@ import com.amazonaws.services.s3.{AmazonS3, AmazonS3ClientBuilder}
 
 trait Config {
   def regionName: RegionName
+  def taskFunctionName: FunctionName
   def vmImportRoleName: RoleName
   def s3: AmazonS3
   def ec2: AmazonEC2
@@ -17,6 +18,10 @@ object Config {
       override lazy val regionName: RegionName = {
         val chain = new DefaultAwsRegionProviderChain
         RegionName(chain.getRegion)
+      }
+
+      override lazy val taskFunctionName: FunctionName = {
+        FunctionName(sys.env("TASK_FUNCTION_NAME"))
       }
 
       override lazy val vmImportRoleName: RoleName = {
