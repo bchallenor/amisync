@@ -19,10 +19,9 @@ class TaskHandler extends RequestHandler[SQSEvent, Unit] {
         throw new IllegalArgumentException(s"Could not parse JSON: $taskStr", e)
     }
 
-    println(s"Running task: ${task.toJson.compactPrint}")
-
     val config = Config.default
 
+    println(s"Running task: ${task.toJson.compactPrint}")
     val nextTasks = task.run(config)
 
     nextTasks foreach { nextTask =>
@@ -39,6 +38,7 @@ object TaskHandler {
           submit(config, delayedTask, delay = delay + d)
         }
       case _ =>
+        println(s"Submitting task with delay of $delay: ${task.toJson.compactPrint}")
         val sqs = AmazonSQSClientBuilder.defaultClient()
         sqs.sendMessage({
           val req = new SendMessageRequest()
