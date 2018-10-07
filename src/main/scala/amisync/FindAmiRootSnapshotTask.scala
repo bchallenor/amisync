@@ -4,7 +4,7 @@ import com.amazonaws.services.ec2.model._
 
 import scala.collection.JavaConverters._
 
-case class DeregisterAmiAndDeleteSnapshotsTask(amiId: AmiId) extends Task {
+case class FindAmiRootSnapshotTask(amiId: AmiId, k: SnapshotId => Set[Task]) extends Task {
   override def run(config: Config): Set[Task] = {
     import config._
     val res = ec2.describeImages({
@@ -13,14 +13,15 @@ case class DeregisterAmiAndDeleteSnapshotsTask(amiId: AmiId) extends Task {
       req
     })
     res.getImages.asScala.headOption.map { image =>
-      val deleteSnapshotTasks: Set[Task] = image
+      val rootSnapshotId = image
         .getBlockDeviceMappings
         .iterator
         .asScala
-        .map(device => DeleteSnapshotTask(SnapshotId(device.getEbs.getSnapshotId)))
-        .toSet
+        .find(device => device.getDeviceName == image.getRootDeviceName)
+        .map(device => SnapshotId(device.getEbs.getSnapshotId))
+        .getOrElse(sys.error(s"Could not find root device: $image"))
 
-      Set[Task](DeregisterAmiTask(amiId, deleteSnapshotTasks))
+      k(rootSnapshotId)
     }.getOrElse(Set.empty[Task])
   }
 }

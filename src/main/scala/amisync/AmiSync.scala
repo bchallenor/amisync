@@ -27,7 +27,12 @@ object AmiSync {
     val imported = findImportedImages(config.ec2)
 
     val extra: Set[Task] = (imported -- importable.keySet).iterator.map { case (ami, image) =>
-      DeregisterAmiAndDeleteSnapshotsTask(AmiId(image.getImageId))
+      val amiId = AmiId(image.getImageId)
+      FindAmiRootSnapshotTask(amiId, rootSnapshotId => Set(
+        DeregisterAmiTask(amiId, Set(
+          DeleteSnapshotTask(rootSnapshotId)
+        ))
+      ))
     }.toSet
 
     val missing: Set[Task] = (importable -- imported.keySet).iterator.map { case (ami, obj) =>

@@ -21,7 +21,11 @@ class S3Handler extends RequestHandler[S3Event, Unit] {
           ImportAmiFromS3Task(amiName, bucket, key)
         case "ObjectRemoved" =>
           FindAmiTask(amiName, amiId => Set(
-            DeregisterAmiAndDeleteSnapshotsTask(amiId)
+            FindAmiRootSnapshotTask(amiId, rootSnapshotId => Set(
+              DeregisterAmiTask(amiId, Set(
+                DeleteSnapshotTask(rootSnapshotId)
+              ))
+            ))
           ))
         case eventType =>
           sys.error(s"Cannot handle event type: $eventType")
