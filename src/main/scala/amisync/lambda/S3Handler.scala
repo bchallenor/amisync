@@ -33,7 +33,7 @@ class S3Handler extends RequestHandler[S3Event, Unit] {
     }.toSet
 
     tasks foreach { task =>
-      TaskHandler.invokeAsync(config, task)
+      TaskHandler.submit(config, task)
     }
   }
 }

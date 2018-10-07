@@ -2,9 +2,8 @@ package amisync.lambda
 
 import amisync._
 import amisync.json._
-import com.amazonaws.services.lambda._
-import com.amazonaws.services.lambda.model._
 import com.amazonaws.services.lambda.runtime._
+import com.amazonaws.services.sqs._
 import spray.json._
 
 class TaskHandler extends RequestJsonHandler[Task, Unit] {
@@ -16,20 +15,17 @@ class TaskHandler extends RequestJsonHandler[Task, Unit] {
     val nextTasks = task.run(config)
 
     nextTasks foreach { nextTask =>
-      TaskHandler.invokeAsync(config, nextTask)
+      TaskHandler.submit(config, nextTask)
     }
   }
 }
 
 object TaskHandler {
-  def invokeAsync(config: Config, task: Task): Unit = {
-    val lambda = AWSLambdaClientBuilder.defaultClient()
-    lambda.invoke({
-      val req = new InvokeRequest
-      req.setFunctionName(config.taskFunctionName.name)
-      req.setInvocationType(InvocationType.Event)
-      req.setPayload(task.toJson.compactPrint)
-      req
-    })
+  def submit(config: Config, task: Task): Unit = {
+    val sqs = AmazonSQSClientBuilder.defaultClient()
+    sqs.sendMessage(
+      config.taskQueueUrl.toString,
+      task.toJson.compactPrint
+    )
   }
 }

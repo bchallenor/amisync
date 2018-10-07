@@ -1,12 +1,14 @@
 package amisync
 
+import java.net.URI
+
 import com.amazonaws.regions.DefaultAwsRegionProviderChain
 import com.amazonaws.services.ec2.{AmazonEC2, AmazonEC2ClientBuilder}
 import com.amazonaws.services.s3.{AmazonS3, AmazonS3ClientBuilder}
 
 trait Config {
   def regionName: RegionName
-  def taskFunctionName: FunctionName
+  def taskQueueUrl: URI
   def vmImportRoleName: RoleName
   def s3: AmazonS3
   def ec2: AmazonEC2
@@ -20,8 +22,8 @@ object Config {
         RegionName(chain.getRegion)
       }
 
-      override lazy val taskFunctionName: FunctionName = {
-        FunctionName(sys.env("TASK_FUNCTION_NAME"))
+      override lazy val taskQueueUrl: URI = {
+        new URI(sys.env("TASK_QUEUE_URL"))
       }
 
       override lazy val vmImportRoleName: RoleName = {
