@@ -96,6 +96,7 @@ case class MemoryEC2(
   override def deleteSnapshot(req: DeleteSnapshotRequest): DeleteSnapshotResult = {
     val snapshotId = SnapshotId(req.getSnapshotId)
     require(snapshots.contains(snapshotId))
+    require(!amis.values.exists(_.snapshotId == snapshotId))
 
     // TODO: should it instead stay in the map, but with a different state?
     snapshots -= snapshotId
