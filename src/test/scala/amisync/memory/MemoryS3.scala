@@ -1,5 +1,6 @@
-package amisync
+package amisync.memory
 
+import amisync._
 import com.amazonaws.services.s3.model.{ObjectListing, S3ObjectSummary}
 
 case class MemoryS3(

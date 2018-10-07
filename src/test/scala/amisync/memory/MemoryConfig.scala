@@ -1,4 +1,6 @@
-package amisync
+package amisync.memory
+
+import amisync._
 
 class MemoryConfig(bucket: Bucket) extends Config {
   override lazy val regionName: RegionName = RegionName("memory")

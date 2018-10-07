@@ -1,6 +1,8 @@
-package amisync
+package amisync.memory
+
 import java.util.concurrent.atomic.AtomicInteger
 
+import amisync._
 import com.amazonaws.services.ec2.model._
 
 import scala.collection.JavaConverters._

@@ -1,5 +1,6 @@
 package amisync
 
+import amisync.memory._
 import org.junit.Assert._
 import org.junit._
 

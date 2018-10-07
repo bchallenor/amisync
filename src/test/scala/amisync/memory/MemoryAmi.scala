@@ -1,5 +1,6 @@
-package amisync
+package amisync.memory
 
+import amisync._
 import com.amazonaws.services.ec2.model.{BlockDeviceMapping, EbsBlockDevice, Image, ImageState}
 
 import scala.collection.JavaConverters._

@@ -1,5 +1,6 @@
-package amisync
+package amisync.memory
 
+import amisync._
 import com.amazonaws.services.ec2.model.{ImportSnapshotTask, SnapshotTaskDetail, UserBucketDetails}
 
 case class MemoryImportTask(
