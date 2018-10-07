@@ -12,7 +12,7 @@ class AmiSyncTest {
 
     config.s3.keys += Key("ami/machine.img")
 
-    AmiSync.run(config, bucket, keyPrefix)
+    AmiSync.run(config, bucket, keyPrefix, skipDelays = true)
 
     assertEquals(
       MemoryEC2(
@@ -39,7 +39,7 @@ class AmiSyncTest {
 
     config.s3.keys -= Key("ami/machine.img")
 
-    AmiSync.run(config, bucket, keyPrefix)
+    AmiSync.run(config, bucket, keyPrefix, skipDelays = true)
 
     assertEquals(
       MemoryEC2(

@@ -17,13 +17,13 @@ object AmiSync {
       case _             => sys.exit(1)
     }
     val config = Config.default
-    run(config, bucket, keyPrefix)
+    run(config, bucket, keyPrefix, skipDelays = false)
   }
 
-  def run(config: Config, bucket: Bucket, keyPrefix: KeyPrefix): Unit = {
+  def run(config: Config, bucket: Bucket, keyPrefix: KeyPrefix, skipDelays: Boolean): Unit = {
     val tasks = buildSyncImageTasks(config, bucket, keyPrefix)
     println(s"Tasks: ${tasks.toJson.prettyPrint}")
-    runTasks(tasks, config)
+    runTasks(tasks, config, skipDelays = skipDelays)
   }
 
   private def buildSyncImageTasks(config: Config, bucket: Bucket, keyPrefix: KeyPrefix): Set[Task] = {
@@ -72,12 +72,15 @@ object AmiSync {
   }
 
   @tailrec
-  private def runTasks(tasks: Set[Task], config: Config): Unit = {
+  private def runTasks(tasks: Set[Task], config: Config, skipDelays: Boolean): Unit = {
     tasks.headOption match {
       case Some(task) =>
         println(s"Running task: ${task.toJson.prettyPrint}")
-        val nextTasks = task.run(config)
-        runTasks(tasks - task ++ nextTasks, config)
+        val nextTasks = task match {
+          case DelayTask(_, k) if skipDelays => k
+          case _ => task.run(config)
+        }
+        runTasks(tasks - task ++ nextTasks, config, skipDelays = skipDelays)
       case None =>
     }
   }
