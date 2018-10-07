@@ -23,7 +23,7 @@ object AmiSync {
   def run(config: Config, bucket: Bucket, keyPrefix: KeyPrefix, skipDelays: Boolean): Unit = {
     val tasks = buildSyncImageTasks(config, bucket, keyPrefix)
     println(s"Tasks: ${tasks.toJson.prettyPrint}")
-    runTasks(tasks, config, skipDelays = skipDelays)
+    runTasks(roundTripViaJson(tasks), config, skipDelays = skipDelays)
   }
 
   private def buildSyncImageTasks(config: Config, bucket: Bucket, keyPrefix: KeyPrefix): Set[Task] = {
@@ -80,8 +80,13 @@ object AmiSync {
           case DelayTask(_, k) if skipDelays => k
           case _ => task.run(config)
         }
-        runTasks(tasks - task ++ nextTasks, config, skipDelays = skipDelays)
+        runTasks(tasks - task ++ roundTripViaJson(nextTasks), config, skipDelays = skipDelays)
       case None =>
     }
+  }
+
+  // Ensure that JSON serialization is tested
+  private def roundTripViaJson(tasks: Set[Task]): Set[Task] = {
+    tasks.toJson.convertTo[Set[Task]]
   }
 }
