@@ -5,7 +5,10 @@ import amisync.json._
 import com.amazonaws.services.lambda.runtime._
 import com.amazonaws.services.lambda.runtime.events.SQSEvent
 import com.amazonaws.services.sqs._
+import com.amazonaws.services.sqs.model.SendMessageRequest
 import spray.json._
+
+import scala.concurrent.duration._
 
 class TaskHandler extends RequestHandler[SQSEvent, Unit] {
   override def handleRequest(event: SQSEvent, context: Context): Unit = {
@@ -23,17 +26,27 @@ class TaskHandler extends RequestHandler[SQSEvent, Unit] {
     val nextTasks = task.run(config)
 
     nextTasks foreach { nextTask =>
-      TaskHandler.submit(config, nextTask)
+      TaskHandler.submit(config, nextTask, delay = Duration.Zero)
     }
   }
 }
 
 object TaskHandler {
-  def submit(config: Config, task: Task): Unit = {
-    val sqs = AmazonSQSClientBuilder.defaultClient()
-    sqs.sendMessage(
-      config.taskQueueUrl.toString,
-      task.toJson.compactPrint
-    )
+  def submit(config: Config, task: Task, delay: FiniteDuration): Unit = {
+    task match {
+      case DelayTask(d, k) =>
+        k foreach { delayedTask =>
+          submit(config, delayedTask, delay = delay + d)
+        }
+      case _ =>
+        val sqs = AmazonSQSClientBuilder.defaultClient()
+        sqs.sendMessage({
+          val req = new SendMessageRequest()
+            .withQueueUrl(config.taskQueueUrl.toString)
+            .withMessageBody(task.toJson.compactPrint)
+            .withDelaySeconds(Math.toIntExact(delay.toSeconds))
+          req
+        })
+    }
   }
 }

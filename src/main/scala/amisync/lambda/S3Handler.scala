@@ -5,6 +5,7 @@ import com.amazonaws.services.lambda.runtime._
 import com.amazonaws.services.lambda.runtime.events._
 
 import scala.collection.JavaConverters._
+import scala.concurrent.duration._
 
 class S3Handler extends RequestHandler[S3Event, Unit] {
   override def handleRequest(event: S3Event, context: Context): Unit = {
@@ -33,7 +34,7 @@ class S3Handler extends RequestHandler[S3Event, Unit] {
     }.toSet
 
     tasks foreach { task =>
-      TaskHandler.submit(config, task)
+      TaskHandler.submit(config, task, delay = Duration.Zero)
     }
   }
 }
