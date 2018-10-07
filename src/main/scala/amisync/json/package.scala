@@ -49,6 +49,7 @@ package object json {
     private implicit lazy val registerAmiTaskFormat: JsonFormat[RegisterAmiTask] = jsonFormat2(RegisterAmiTask)
     private implicit lazy val waitForCopySnapshotTaskFormat: JsonFormat[WaitForCopySnapshotTask] = jsonFormat2(WaitForCopySnapshotTask)
     private implicit lazy val waitForImportSnapshotTaskFormat: JsonFormat[WaitForImportSnapshotTask] = jsonFormat2(WaitForImportSnapshotTask)
+    private implicit lazy val findAmiTaskFormat: JsonFormat[FindAmiTask] = jsonFormat2(FindAmiTask)
 
     override def read(json: JsValue): Task = {
       json.asJsObject.fields("task").convertTo[String] match {
@@ -61,6 +62,7 @@ package object json {
         case "RegisterAmi" => registerAmiTaskFormat.read(json)
         case "WaitForCopySnapshot" => waitForCopySnapshotTaskFormat.read(json)
         case "WaitForImportSnapshot" => waitForImportSnapshotTaskFormat.read(json)
+        case "FindAmi" => findAmiTaskFormat.read(json)
       }
     }
 
@@ -74,6 +76,7 @@ package object json {
       case task: RegisterAmiTask => writeTask("RegisterAmi", task)
       case task: WaitForCopySnapshotTask => writeTask("WaitForCopySnapshot", task)
       case task: WaitForImportSnapshotTask => writeTask("WaitForImportSnapshot", task)
+      case task: FindAmiTask => writeTask("FindAmi", task)
     }
 
     private def writeTask[T: JsonFormat](typeName: String, task: T): JsObject = {
@@ -85,6 +88,7 @@ package object json {
     def placeholder(uuid: UUID): A
   }
 
+  private implicit lazy val amiIdPlaceholder: Placeholder[AmiId] = uuid => AmiId(uuid.toString)
   private implicit lazy val snapshotIdPlaceholder: Placeholder[SnapshotId] = uuid => SnapshotId(uuid.toString)
 
   implicit def continuationJsonFormat[A: Placeholder: JsonFormat, B: JsonFormat]: JsonFormat[A => B] = new JsonFormat[A => B] {
