@@ -3,6 +3,7 @@ package amisync.memory
 import java.util.concurrent.atomic.AtomicInteger
 
 import amisync._
+import com.amazonaws.services.ec2.AbstractAmazonEC2
 import com.amazonaws.services.ec2.model._
 
 import scala.collection.JavaConverters._
@@ -11,7 +12,7 @@ case class MemoryEC2(
   var importTasks: Map[ImportTaskId, MemoryImportTask] = Map.empty,
   var snapshots: Map[SnapshotId, MemorySnapshot] = Map.empty,
   var amis: Map[AmiId, MemoryAmi] = Map.empty
-) extends AbstractEC2 {
+) extends AbstractAmazonEC2 {
   private val nextImportTaskId = {
     val count = new AtomicInteger(1)
     () => ImportTaskId(f"import-snap-${count.getAndIncrement}%03d")

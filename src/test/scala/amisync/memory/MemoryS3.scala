@@ -1,12 +1,13 @@
 package amisync.memory
 
 import amisync._
+import com.amazonaws.services.s3.AbstractAmazonS3
 import com.amazonaws.services.s3.model.{ObjectListing, S3ObjectSummary}
 
 case class MemoryS3(
   bucket: Bucket,
   var keys: Set[Key] = Set.empty
-) extends AbstractS3 {
+) extends AbstractAmazonS3 {
   override def listObjects(bucketName: String, prefix: String): ObjectListing = {
     require(bucketName == bucket.name)
     val listing = new ObjectListing
